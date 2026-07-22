@@ -1,0 +1,28 @@
+# The Docker build context is the challenge repo ROOT (see verifier/Dockerfile). The image
+# COPYs only data/ and verifier/rust/, so exclude everything else to keep the context lean.
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+.venv/
+
+# Rust build output (hundreds of MB)
+target/
+**/target/
+
+# VCS and scratch
+.git/
+.gitignore
+*.log
+.DS_Store
+in.json
+out.json
+
+# Not needed inside the verifier image
+reference/
+samples/
+tests/
+tools/
+*.xwd
+*.md

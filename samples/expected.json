@@ -1,0 +1,6 @@
+{
+  "valid.xwd": "valid",
+  "invalid_wrong_length": "invalid",
+  "invalid_bad_magic.xwd": "invalid",
+  "invalid_anchor_oor.xwd": "invalid"
+}

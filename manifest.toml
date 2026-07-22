@@ -1,0 +1,50 @@
+# manifest.toml -- Smallest Complete Crossword. Technical contract + content metadata.
+# Operational policy (visibility / deadline / rate-limit) is set at deploy time, not here.
+
+slug              = "smallest-complete-crossword"
+title             = "Smallest Complete Crossword"
+submission_format = "packed-binary-placements (.xwd)"
+
+description_one_line = "Pack every word of the Moby single-word list into the smallest possible square crossword."
+verifier_description = "Decodes a binary file of one placement (anchor + orientation) per dictionary word, paints each word's letters from the pinned Moby single-word list into a grid, then checks it is a valid connected crossword: consistent overlaps, no lone letters, and the multiset of maximal across/down runs equals the whole word list exactly (every word once, no non-word run, no duplicate, none missing). Scores the side of the smallest enclosing square, then the number of filled cells. A fast Rust verifier runs in production; an equivalent Python reference (checker.py) is the readable spec, and a differential test keeps them identical."
+verifier_repo_url    = "https://github.com/argmin-dev/challenge-smallest-crossword"
+
+# Ranked metrics, primary first. Strictly lexicographic; exact ties keep the incumbent.
+[[metric]]
+label     = "side"          # side length of the smallest square enclosing all filled cells
+direction = "min"
+baseline  = 3388            # the shipped reference solution (reference/baseline.xwd)
+
+[[metric]]
+label     = "filled_cells"  # tie-breaker: fewer filled cells == more crossings == tighter weave
+direction = "min"
+baseline  = 2970647
+
+# Display-only; reported next to each entry, never ranked.
+[[display_metric]]
+label = "density"           # filled_cells / side^2
+[[display_metric]]
+label = "crossings"         # total letters (3,321,695) - filled_cells
+[[display_metric]]
+label = "bbox_width"
+[[display_metric]]
+label = "bbox_height"
+
+[dedup]
+scope = "challenge"         # dedup across all prior submissions of this challenge.
+
+# Safety-kills only; never affect the score. The Rust verifier checks the full baseline in
+# a few seconds; the Python dev path is slower. Ceilings clamp these (<=120s, <=4096MB).
+[limits]
+timeout_seconds = 120
+memory_mb       = 1024
+cpus            = 1
+
+# LOCAL-DEV ONLY: the subprocess driver runs the Python reference without Docker.
+# Production ignores this and builds verifier/Dockerfile (the Rust verifier).
+[dev]
+entrypoint = "python3 verifier/entrypoint.py"
+
+# Full verifier test suite: Python unit tests + Rust unit tests + Python/Rust differential.
+[test]
+command = "bash tests/run_all.sh"

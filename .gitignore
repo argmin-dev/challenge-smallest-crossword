@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Rust verifier build output
+target/
+verifier/rust/target/
+
+# scratch
+*.log
+.DS_Store
+in.json
+out.json
+*.xwd
+!reference/baseline.xwd
+!samples/*.xwd
