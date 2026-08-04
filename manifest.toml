@@ -34,11 +34,15 @@ label = "bbox_height"
 scope = "challenge"         # dedup across all prior submissions of this challenge.
 
 # Safety-kills only; never affect the score. The Rust verifier checks the full baseline in
-# a few seconds; the Python dev path is slower. Ceilings clamp these (<=120s, <=4096MB).
+# a few seconds; the Python dev path is slower. Ceilings clamp these (<=120s, <=1536MB, <=2 cpu).
 [limits]
 timeout_seconds = 120
 memory_mb       = 1024
 cpus            = 1
+# Every valid artifact is exactly 5 + 4 * 351049 bytes (see constraints.md), so the
+# intake cap is that exact size: nothing smaller can be valid, nothing larger is worth
+# reading. Submissions are carried as raw bytes, and this counts the file itself.
+max_submission_bytes = 1404201
 
 # LOCAL-DEV ONLY: the subprocess driver runs the Python reference without Docker.
 # Production ignores this and builds verifier/Dockerfile (the Rust verifier).
