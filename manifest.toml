@@ -20,15 +20,15 @@ label     = "filled_cells"  # tie-breaker: fewer filled cells == more crossings 
 direction = "min"
 baseline  = 2970647
 
-# Display-only; reported next to each entry, never ranked.
+# Display-only; reported next to each entry, never ranked. Keep this list SHORT: every
+# entry is a leaderboard column, and with the two ranked metrics plus rank and solver
+# the table starts scrolling sideways at around six. Density is the one that adds
+# something the ranked metrics do not already say. Dropped for that reason: `crossings`
+# (a fixed offset from filled_cells, so it restates the tie-breaker), and `bbox_width` /
+# `bbox_height` (both equal `side` for any solution that fills its bounding square).
+# The verifier still computes them; they are simply not declared, so not reported.
 [[display_metric]]
 label = "density"           # filled_cells / side^2
-[[display_metric]]
-label = "crossings"         # total letters (3,321,695) - filled_cells
-[[display_metric]]
-label = "bbox_width"
-[[display_metric]]
-label = "bbox_height"
 
 [dedup]
 scope = "challenge"         # dedup across all prior submissions of this challenge.
