@@ -214,6 +214,61 @@ class Fingerprint(unittest.TestCase):
         shifted = checker.fingerprint_bytes(checker.encode(9, [(2, 3, 1), (2, 3, 0)]), CATCAR)
         self.assertEqual(base, shifted)
 
+    def test_dihedral_invariant_all_eight_images(self):
+        # The canonical key is taken over the eight symmetries of the square, so
+        # every rotation and reflection of one grid must land on one fingerprint.
+        # Applied to the cell map directly because only two of the eight images are
+        # expressible as a valid artifact for a given word list (see
+        # test_transpose_artifact_collides): the other six reverse a reading
+        # direction. Canonicalization still has to cover all eight.
+        cell = {(0, 0): "C", (1, 0): "A", (2, 0): "R", (0, 1): "A", (0, 2): "T"}
+        transforms = [
+            lambda r, c: (r, c),
+            lambda r, c: (r, -c),
+            lambda r, c: (-r, c),
+            lambda r, c: (-r, -c),
+            lambda r, c: (c, r),
+            lambda r, c: (c, -r),
+            lambda r, c: (-c, r),
+            lambda r, c: (-c, -r),
+        ]
+        digests = {
+            checker.canonical_digest({t(r, c): ch for (r, c), ch in cell.items()})
+            for t in transforms
+        }
+        self.assertEqual(len(digests), 1, f"expected one fingerprint, got {digests}")
+
+        # ...and translating any of those images does not change it either.
+        shifted = {(r + 37, c + 11): ch for (r, c), ch in cell.items()}
+        self.assertEqual(checker.canonical_digest(shifted), digests.pop())
+
+    def test_non_equivalent_grid_differs(self):
+        # Same cells, one letter changed: not a dihedral image of the original, so
+        # it must NOT collide. Guards against a canonicalization that throws away
+        # the letters and fingerprints only the shape.
+        a = {(0, 0): "C", (1, 0): "A", (2, 0): "R", (0, 1): "A", (0, 2): "T"}
+        b = dict(a)
+        b[(2, 0)] = "T"
+        self.assertNotEqual(checker.canonical_digest(a), checker.canonical_digest(b))
+
+        # And a genuinely different shape differs too.
+        c = {(0, 0): "C", (0, 1): "A", (0, 2): "T"}
+        self.assertNotEqual(checker.canonical_digest(a), checker.canonical_digest(c))
+
+    def test_transpose_artifact_collides(self):
+        # End to end through the real artifact path. Transposing swaps (row, col)
+        # and flips every orientation, which is the one non-identity D4 image that
+        # yields a valid crossword for the same word list: an across word becomes a
+        # down word still read top to bottom. Before this change the two grids were
+        # distinct fingerprints and the same solution could be submitted twice.
+        original = checker.encode(3, [(0, 0, 1), (0, 0, 0)])
+        transposed = checker.encode(3, [(0, 0, 0), (0, 0, 1)])
+        self.assertNotEqual(original, transposed, "fixture must be two different files")
+        self.assertEqual(
+            checker.fingerprint_bytes(original, CATCAR),
+            checker.fingerprint_bytes(transposed, CATCAR),
+        )
+
     def test_malformed_falls_back_to_raw_hash(self):
         raw = b"not a valid artifact at all"
         self.assertEqual(checker.fingerprint_bytes(raw, CATCAR),

@@ -357,22 +357,79 @@ def check_bytes(raw: bytes, words, index, total_letters, current_best=None) -> d
         return {"status": "invalid", "metrics": None, "reason": str(e), "info": None}
 
 
+# The eight symmetries of the square (the dihedral group D4), as functions of a
+# signed cell coordinate. Four rotations and four reflections; every one maps a
+# grid onto a grid that reads as the same crossword turned or mirrored.
+_D4 = (
+    lambda r, c: (r, c),
+    lambda r, c: (r, -c),
+    lambda r, c: (-r, c),
+    lambda r, c: (-r, -c),
+    lambda r, c: (c, r),
+    lambda r, c: (c, -r),
+    lambda r, c: (-c, r),
+    lambda r, c: (-c, -r),
+)
+
+
+def _serialize(cell) -> bytes:
+    """Canonical bytes for ONE image: translate to the origin, sort, concatenate.
+
+    Each cell becomes 9 bytes: normalized row as u32 little-endian, normalized
+    column as u32 little-endian, then the single ASCII letter. Normalization
+    subtracts the image's own minimum row and column, which is what makes the
+    result invariant to where the grid sits in the coordinate space.
+    """
+    minr = min(r for (r, _) in cell)
+    minc = min(c for (_, c) in cell)
+    out = bytearray()
+    for (r, c) in sorted(cell):  # by (row, column); total order, so deterministic
+        nr = r - minr
+        nc = c - minc
+        # The subtraction above cannot go negative, but narrowing to u32 is only
+        # safe if it also cannot exceed the range. N_MAX bounds both, and a
+        # decoded grid has already passed the range check; assert rather than
+        # silently wrap, because a wrap would collide two distinct grids.
+        if not (0 <= nr < 1 << 32) or not (0 <= nc < 1 << 32):
+            raise ValueError("normalized coordinate out of u32 range")
+        out += nr.to_bytes(4, "little")
+        out += nc.to_bytes(4, "little")
+        out += cell[(r, c)].encode("ascii")
+    return bytes(out)
+
+
 def fingerprint_bytes(raw: bytes, words) -> str:
+    """Canonical dedup key: SHA-256 of the smallest of the eight D4 serializations.
+
+    Dedup is up to the full symmetry of the square, not just translation. Two
+    submissions describing the same crossword rotated or mirrored are the same
+    solution and score identically, so they collide here and the later one is
+    rejected before it is ever verified.
+
+    Note the order of operations: pick the lexicographically smallest SERIALIZED
+    BYTE STRING among the eight images, then hash that string once. Hashing all
+    eight and taking the smallest hash would also be deterministic but it would
+    not be canonical in any useful sense, and it would cost eight hashes.
+    """
     try:
         n, placements = _decode(raw, words)
         cell = _build_grid(placements, words)
         if not cell:
             return hashlib.sha256(raw).hexdigest()
-        minr = min(r for (r, _) in cell)
-        minc = min(c for (_, c) in cell)
-        h = hashlib.sha256()
-        for (r, c) in sorted(cell):  # sorted by (row, col); deterministic
-            h.update((r - minr).to_bytes(4, "little"))
-            h.update((c - minc).to_bytes(4, "little"))
-            h.update(cell[(r, c)].encode("ascii"))
-        return h.hexdigest()
+        return canonical_digest(cell)
     except Exception:
         return hashlib.sha256(raw).hexdigest()
+
+
+def canonical_digest(cell) -> str:
+    """The dedup key for an already-reconstructed cell map. Split out from
+    fingerprint_bytes so the tests can hand it the eight images directly."""
+    best = None
+    for t in _D4:
+        s = _serialize({t(r, c): ch for (r, c), ch in cell.items()})
+        if best is None or s < best:
+            best = s
+    return hashlib.sha256(best).hexdigest()
 
 
 # ---------------------------------------------------------------------------------------

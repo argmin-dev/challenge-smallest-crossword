@@ -26,8 +26,9 @@ a verifier that scores an invalid submission, since the verifier is the spec):
    every rule path: the real baseline, byte-level corruptions (V1), full-size grids
    engineered to hit V2, V4-duplicate, V4-non-word, V4-missing, and V5-disconnected
    (each guarded by an assertion that it reached that rule), seeded random garbage,
-   `current_best` skip-vs-validate scenarios, and a shifted baseline for fingerprint
-   translation invariance. It requires identical status, metrics, and fingerprint on
+   `current_best` skip-vs-validate scenarios, and both a shifted and a transposed
+   baseline for fingerprint canonicalization under the symmetries of the square.
+   It requires identical status, metrics, and fingerprint on
    every one. This is what lets us ship the fast Rust verifier while trusting
    `checker.py` as the readable spec: if they ever diverge, this fails.
 

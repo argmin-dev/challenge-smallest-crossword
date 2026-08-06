@@ -8,7 +8,8 @@ over a battery that reaches every rule path:
     V4-missing, and V5-disconnected (each guarded by an assertion that it hit that rule),
   - seeded random garbage,
   - current_best scenarios exercising the skip-vs-validate early exit, and
-  - a horizontally shifted baseline checking fingerprint translation invariance.
+  - a shifted and a transposed baseline, checking that the fingerprint is invariant
+    under the dihedral symmetries of the square, not just under translation.
 
 This is the guard that lets us ship a fast Rust verifier on the backend while trusting the
 readable Python file as the spec: if they ever diverge, this fails.
@@ -199,11 +200,21 @@ def main():
             continue
         print(f"[ok]   {name}: status=invalid ({expect}) [py==rust]")
 
-    # Fingerprint translation invariance, cross-language: a horizontally shifted baseline must
-    # fingerprint identically to the baseline, in BOTH verifiers.
+    # Fingerprint canonicalization, cross-language, at full scale. The key is taken
+    # over the eight symmetries of the square, so every one of these must collide
+    # with the baseline in BOTH verifiers:
+    #   shifted    a translation (the property that already held).
+    #   transposed swap (row, col) and flip every orientation. This is the one
+    #              non-identity D4 image that is itself a valid crossword for this
+    #              word list: an across word becomes a down word still read top to
+    #              bottom. The other six reverse a reading direction, so they cannot
+    #              be built as an artifact and are covered by the unit test instead.
+    #              Before dihedral dedup this was a distinct fingerprint, so the same
+    #              solution could be banked twice.
     shifted = checker.encode(n0, [(r, c + 1, o) for (r, c, o) in pls0])
+    transposed = checker.encode(n0, [(c, r, 1 - o) for (r, c, o) in pls0])
     base_fp = py_fingerprint(base)
-    for label, raw in (("baseline", base), ("shifted", shifted)):
+    for label, raw in (("baseline", base), ("shifted", shifted), ("transposed", transposed)):
         checked += 1
         pf = py_fingerprint(raw)
         rf = rust(raw, "fingerprint")["fingerprint"]
@@ -212,7 +223,7 @@ def main():
             failures += 1
             continue
         if pf != base_fp:
-            print(f"[FAIL] fp_{label}: {pf} != baseline {base_fp} (not translation-invariant)")
+            print(f"[FAIL] fp_{label}: {pf} != baseline {base_fp} (not dihedral-invariant)")
             failures += 1
             continue
         print(f"[ok]   fp_{label}: {pf[:16]}... (== baseline, py==rust)")

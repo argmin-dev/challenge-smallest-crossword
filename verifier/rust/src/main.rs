@@ -342,6 +342,54 @@ fn round6(x: f64) -> f64 {
     (x * 1_000_000.0).round() / 1_000_000.0
 }
 
+/// The eight symmetries of the square (the dihedral group D4). Must stay
+/// byte-identical in order and effect to `_D4` in verifier/checker.py.
+const D4: [fn(i64, i64) -> (i64, i64); 8] = [
+    |r, c| (r, c),
+    |r, c| (r, -c),
+    |r, c| (-r, c),
+    |r, c| (-r, -c),
+    |r, c| (c, r),
+    |r, c| (c, -r),
+    |r, c| (-c, r),
+    |r, c| (-c, -r),
+];
+
+/// Canonical bytes for ONE image: translate to the origin, sort by (row, column),
+/// then 9 bytes per cell (row u32 LE, column u32 LE, one ASCII letter).
+///
+/// Returns None if a normalized coordinate will not fit in a u32. It cannot with
+/// N_MAX as it stands, but `as u32` would wrap silently and collide two distinct
+/// grids onto one fingerprint, so the check is explicit rather than assumed.
+fn serialize_image(cells: &[((i64, i64), u8)]) -> Option<Vec<u8>> {
+    let minr = cells.iter().map(|&((r, _), _)| r).min()?;
+    let minc = cells.iter().map(|&((_, c), _)| c).min()?;
+    let mut sorted: Vec<((i64, i64), u8)> = cells.to_vec();
+    sorted.sort_unstable_by_key(|&((r, c), _)| (r, c));
+    let mut out = Vec::with_capacity(sorted.len() * 9);
+    for ((r, c), ch) in sorted {
+        let nr = r - minr;
+        let nc = c - minc;
+        if nr < 0 || nc < 0 || nr > u32::MAX as i64 || nc > u32::MAX as i64 {
+            return None;
+        }
+        out.extend_from_slice(&(nr as u32).to_le_bytes());
+        out.extend_from_slice(&(nc as u32).to_le_bytes());
+        out.push(ch);
+    }
+    Some(out)
+}
+
+/// Canonical dedup key: SHA-256 of the smallest of the eight D4 serializations.
+///
+/// Dedup is up to the full symmetry of the square, not just translation: a
+/// crossword rotated or mirrored is the same solution and scores identically, so
+/// it must collide. Pick the lexicographically smallest serialized BYTE STRING
+/// first, then hash that once; taking the smallest of eight hashes would be
+/// deterministic but not canonical, and would cost eight hashes.
+///
+/// Mirrors fingerprint_bytes() in verifier/checker.py byte for byte; the
+/// differential test enforces it.
 fn fingerprint(raw: &[u8], words: &[String]) -> String {
     let fallback = || hex(&Sha256::digest(raw));
     let (_n, placements) = match decode(raw, words) {
@@ -355,17 +403,23 @@ fn fingerprint(raw: &[u8], words: &[String]) -> String {
     if cell.is_empty() {
         return fallback();
     }
-    let minr = cell.keys().map(|&(r, _)| r).min().unwrap();
-    let minc = cell.keys().map(|&(_, c)| c).min().unwrap();
-    let mut cells: Vec<((i64, i64), u8)> = cell.iter().map(|(&k, &v)| (k, v)).collect();
-    cells.sort_unstable_by_key(|&((r, c), _)| (r, c));
-    let mut h = Sha256::new();
-    for ((r, c), ch) in cells {
-        h.update(((r - minr) as u32).to_le_bytes());
-        h.update(((c - minc) as u32).to_le_bytes());
-        h.update([ch]);
+    let base: Vec<((i64, i64), u8)> = cell.iter().map(|(&k, &v)| (k, v)).collect();
+    let mut best: Option<Vec<u8>> = None;
+    for t in D4.iter() {
+        let image: Vec<((i64, i64), u8)> =
+            base.iter().map(|&((r, c), ch)| (t(r, c), ch)).collect();
+        let s = match serialize_image(&image) {
+            Some(s) => s,
+            None => return fallback(),
+        };
+        if best.as_ref().map_or(true, |b| s < *b) {
+            best = Some(s);
+        }
     }
-    hex(&h.finalize())
+    match best {
+        Some(b) => hex(&Sha256::digest(&b)),
+        None => fallback(),
+    }
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -524,12 +578,45 @@ mod tests {
 
     #[test]
     fn baseline_fingerprint_is_stable() {
-        // Must match the Python reference fingerprint for the same bytes.
+        // Must match the Python reference fingerprint for the same bytes. This value
+        // changed when dedup moved from translation-only to the full dihedral group;
+        // any future change to it is a change to the dedup scheme, not a refactor.
         let (w, _, _) = load_dict();
         let raw = std::fs::read(BASELINE).unwrap();
         assert_eq!(
             fingerprint(&raw, &w),
-            "c0d1a1fbe6b216d516f01a064aa85db0c51ace50c269a03351b0d44bb79a3689"
+            "465ea0d7b0ee824b0c1006bc80f9306b315d3e2a0b5c0b662b7ecd19d9c222ba"
         );
+    }
+
+    /// Test-only inverse of decode(). The verifier never writes an artifact, so this
+    /// lives here rather than in the production path. Mirrors checker.encode().
+    fn encode_artifact(n: i64, records: &[(i64, i64, u8)]) -> Vec<u8> {
+        let mut out = Vec::with_capacity(HEADER_LEN + RECORD_LEN * records.len());
+        out.extend_from_slice(MAGIC);
+        out.extend_from_slice(&(n as u16).to_le_bytes());
+        for &(row, col, orient) in records {
+            let p = (row + n * col) as u32;
+            let v = if orient != 0 { ORIENT_BIT | p } else { p };
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        out
+    }
+
+    #[test]
+    fn baseline_transpose_shares_the_fingerprint() {
+        // The transpose swaps (row, col) and flips every orientation, and is the one
+        // non-identity D4 image that is itself a valid crossword for this word list.
+        // It must collide, or the same solution could be banked twice.
+        let (w, _, _) = load_dict();
+        let raw = std::fs::read(BASELINE).unwrap();
+        let (n, placements) = decode(&raw, &w).unwrap();
+        let transposed: Vec<(i64, i64, u8)> = placements
+            .iter()
+            .map(|&(r, c, o)| (c, r, 1 - o))
+            .collect();
+        let re = encode_artifact(n, &transposed);
+        assert_ne!(raw, re, "fixture must be two different files");
+        assert_eq!(fingerprint(&raw, &w), fingerprint(&re, &w));
     }
 }
