@@ -1,5 +1,3 @@
-# Smallest Complete Crossword
-
 Pack every word of a fixed public word list into a single square grid so the whole
 thing reads as one connected crossword, and make that grid as small as you can.
 Smaller side wins; among grids of the same side, fewer filled cells wins.
@@ -14,13 +12,12 @@ exactly once, no run is a non-word, and all letters form one connected block.
 
 ## What you submit
 
-You do not submit the grid or any letters. You submit only, for each word, where it
-goes: an anchor cell and an orientation (across or down). The verifier paints the
-letters itself, taking them from the trusted word list, then checks the result. So a
-submission can only choose positions for the real dictionary words; it can never
-inject a letter or a word that is not on the list.
+You submit only, for each word, where it goes: an anchor cell and an orientation
+(across or down). The verifier paints the letters itself, taking them from the trusted
+word list, then checks the result. So a submission can only choose positions for the
+real dictionary words; it can never inject a letter or a word that is not on the list.
 
-The artifact is a small binary file (the format is in [`constraints.md`](constraints.md)):
+The artifact is a fixed-size binary file (the format is in [`constraints.md`](constraints.md)):
 a 3-byte magic, the grid side `n`, then one fixed-width record per word, in dictionary
 order, so a record's position in the file is its word. For the full list the file is
 exactly `5 + 4 * 351049 = 1,404,201` bytes.
@@ -43,15 +40,3 @@ margin.
 Also reported next to each entry, for context only and never ranked: `density`
 (`filled_cells / side^2`), `crossings` (the number of shared cells, total letters minus
 `filled_cells`), `bbox_width`, and `bbox_height`.
-
-## How small can it get
-
-- Lower bound `side >= 1289`. Every filled cell holds one letter and lies on at most
-  one across word and one down word, so it is counted by at most two words. Summing
-  word lengths, `total_letters <= 2 * filled_cells`, hence
-  `filled_cells >= ceil(3,321,695 / 2) = 1,660,848` and
-  `side >= ceil(sqrt(1,660,848)) = 1289`. This is a floor no valid grid can beat; it is
-  not a claim that a grid this small exists. A second, weaker floor is `side >= 31`,
-  since the longest word must fit on one line.
-- The baseline record to beat is `side = 3388` (`filled_cells = 2,970,647`), far
-  above the 1289 floor, so there is a large gap to close.
