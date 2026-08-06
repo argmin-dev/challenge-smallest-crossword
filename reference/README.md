@@ -9,7 +9,7 @@ one valid, connected crossword with:
 - fingerprint `c0d1a1fbe6b216d516f01a064aa85db0c51ace50c269a03351b0d44bb79a3689`
 
 It is a starting point, provided as-is. The `.xwd` binary format is specified in
-[`../constraints.md`](../constraints.md) (Submission format).
+[`../submit.md`](../submit.md).
 
 Verify it via the dev path:
 

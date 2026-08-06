@@ -6,7 +6,6 @@ title             = "Smallest Complete Crossword"
 submission_format = "packed-binary-placements (.xwd)"
 
 description_one_line = "Pack every word of the Moby single-word list into the smallest possible square crossword."
-verifier_description = "Decodes a binary file of one placement (anchor + orientation) per dictionary word, paints each word's letters from the pinned Moby single-word list into a grid, then checks it is a valid connected crossword: consistent overlaps, no lone letters, and the multiset of maximal across/down runs equals the whole word list exactly (every word once, no non-word run, no duplicate, none missing). Scores the side of the smallest enclosing square, then the number of filled cells. A fast Rust verifier runs in production; an equivalent Python reference (checker.py) is the readable spec, and a differential test keeps them identical."
 verifier_repo_url    = "https://github.com/argmin-dev/challenge-smallest-crossword"
 
 # Ranked metrics, primary first. Strictly lexicographic; exact ties keep the incumbent.
@@ -39,7 +38,7 @@ scope = "challenge"         # dedup across all prior submissions of this challen
 timeout_seconds = 120
 memory_mb       = 1024
 cpus            = 1
-# Every valid artifact is exactly 5 + 4 * 351049 bytes (see constraints.md), so the
+# Every valid artifact is exactly 5 + 4 * 351049 bytes (see submit.md), so the
 # intake cap is that exact size: nothing smaller can be valid, nothing larger is worth
 # reading. Submissions are carried as raw bytes, and this counts the file itself.
 max_submission_bytes = 1404201

@@ -2,7 +2,7 @@
 
 Pack the entire Moby single-word list into the smallest square crossword you can. This
 README is self-contained: read it and you can build, encode, and check a submission
-locally. [`objective.md`](objective.md) and [`constraints.md`](constraints.md) restate
+locally. [`description.md`](description.md), [`submit.md`](submit.md), [`rules.md`](rules.md) and [`score.md`](score.md) restate
 the same rules in spec form.
 
 ## The problem
@@ -25,7 +25,7 @@ You are scored on two things, ranked lexicographically:
 2. `filled_cells` (fewer wins): tie-breaker; fewer filled cells means a tighter weave
    (more shared letters).
 
-Exact ties keep the earlier submission. See [`objective.md`](objective.md) for the
+Exact ties keep the earlier submission. See [`score.md`](score.md) for the
 full scoring text and the display-only metrics.
 
 ## What you submit
@@ -35,7 +35,7 @@ file, `XWD`, holding the grid side `n` and one record per word (in dictionary or
 giving that word's anchor cell and orientation (across or down). The verifier paints
 the letters from the trusted list and checks the result, so you can only position the
 real words, never inject a letter or a fake word. Full format in
-[`constraints.md`](constraints.md); for the full list the file is exactly `1,404,201`
+[`rules.md`](rules.md); for the full list the file is exactly `1,404,201`
 bytes.
 
 ## How small can it get
@@ -50,7 +50,7 @@ bytes.
 ## Build an artifact
 
 Your solver decides where each word goes and produces the `XWD` binary. You can write
-the bytes directly from the format in [`constraints.md`](constraints.md), or emit a
+the bytes directly from the format in [`submit.md`](submit.md), or emit a
 plain-text placements file (line 1 = word count, then one `row col orient` per word in
 dictionary order, `orient` 0 = across / 1 = down) and encode it:
 
@@ -122,8 +122,11 @@ See [`tests/README.md`](tests/README.md) for what each layer covers.
 
 ```
 manifest.toml          technical contract (metrics, dedup, limits, descriptions)
-objective.md           problem statement + scoring
-constraints.md         word list, artifact format, validity rules V1-V5
+description.md         what the challenge is (shown uncollapsed on the site)
+submit.md              artifact format and byte layout
+score.md               the two metrics and how they rank
+verifier.md            how a submission is checked, determinism, dedup
+rules.md               word list and validity rules V1-V5
 data/moby-single.txt   the pinned Moby word list (SHA-256 in the verifier)
 verifier/
   entrypoint.py        IO-contract boilerplate (verify + fingerprint). Do not edit.
