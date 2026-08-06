@@ -5,8 +5,8 @@ multiset of maximal across and down runs equals the whole word list exactly (eve
 once, no non-word run, no duplicate, none missing). Scores the result as `side` then
 `filled_cells`.
 
-The verifier enforces exactly the rules in [Constraints](constraints.md) and nothing more: the
-verifier is the spec. There are two implementations.
+The verifier enforces exactly the rules in [Constraints](constraints.md) and nothing
+more: the verifier is the spec. There are two implementations.
 [`verifier/checker.py`](verifier/checker.py) is the readable reference and the
 authoritative one; the Rust verifier in [`verifier/rust/`](verifier/rust/) is the fast
 production one, mirroring it constant for constant. A differential test

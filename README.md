@@ -30,13 +30,10 @@ full scoring text and the display-only metrics.
 
 ## What you submit
 
-Not the grid, and not any letters: only where each word goes. The artifact is a binary
-file, `XWD`, holding the grid side `n` and one record per word (in dictionary order)
-giving that word's anchor cell and orientation (across or down). The verifier paints
-the letters from the trusted list and checks the result, so you can only position the
-real words, never inject a letter or a fake word. Full format in
-[`constraints.md`](constraints.md); for the full list the file is exactly `1,404,201`
-bytes.
+A binary file, `XWD`, holding the grid side `n` and one record per word (in dictionary
+order) giving that word's anchor cell and orientation (across or down). Not the grid,
+and not any letters. It is exactly `1,404,201` bytes; full format in
+[`submit.md`](submit.md).
 
 ## How small can it get
 
