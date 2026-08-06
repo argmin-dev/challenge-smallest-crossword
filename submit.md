@@ -8,7 +8,7 @@ then exactly |D| = 351,049 records, each a u32:
     bits 0..=30   p: the anchor index, with p = row + n * col
 ```
 
-The file length must be exactly `5 + 4 * 351049 = 1,404,201` bytes. Any other length is
+The file is exactly `5 + 4 * 351049 = 1,404,201` bytes; any other length is
 `invalid`.
 
 Records are in the canonical dictionary order defined in
