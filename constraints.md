@@ -16,26 +16,26 @@
 The verifier reconstructs the grid from `(n, records)` by painting each word's letters
 from `D`, then requires all of:
 
-1. V1, well-formed and in range: correct magic, exact file length, `2 <= n <= 3388`
+1. **Well-formed and in range**: correct magic, exact file length, `2 <= n <= 3388`
    (a grid wider than the baseline side could not beat the baseline), every record's
    `p < n*n`, and every word fits wholly inside the `n x n` grid (an across word needs
    `col + len <= n`, a down word needs `row + len <= n`).
-2. V2, consistent overlaps: wherever two words cross they agree on the shared letter.
+2. **Consistent overlaps**: wherever two words cross they agree on the shared letter.
    A cell two words would fill differently is `invalid`.
-3. V3, no lone cells: every filled cell belongs to at least one entry. An isolated
+3. **No lone cells**: every filled cell belongs to at least one entry. An isolated
    single letter is `invalid`.
-4. V4, exact lexicon match: an entry is a maximal run of 2 or more consecutive filled
+4. **Exact lexicon match**: an entry is a maximal run of 2 or more consecutive filled
    cells in one row (across) or column (down), bounded by a blank or the grid edge
    ("maximal" means `CATS` is one entry, not also `CAT`). The multiset of all entries,
    across and down, must equal `D` exactly: every word once, no non-word, no duplicate,
    none missing. This rule alone decides coverage; the records only build the grid.
-5. V5, connected: all filled cells form a single 4-connected component (up, down, left,
+5. **Connected**: all filled cells form a single 4-connected component (up, down, left,
    right, not diagonal).
 
 Reading is across (left to right) and down (top to bottom) only: no diagonals, no
 reversed words.
 
-V1 and V2 alone fix the score, so the verifier compares it to the current best first (or
-to the baseline on an empty board). A grid that cannot beat the best can never take the
-record, so it returns `skipped` without running V3 to V5. That is a cost optimization
-only: a grid that could take the record is always checked in full.
+Rules 1 and 2 alone fix the score, so the verifier compares it to the current best first
+(or to the baseline on an empty board). A grid that cannot beat the best can never take
+the record, so it returns `skipped` without running rules 3 to 5. That is a cost
+optimization only: a grid that could take the record is always checked in full.

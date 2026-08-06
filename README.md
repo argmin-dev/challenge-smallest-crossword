@@ -2,8 +2,9 @@
 
 Pack the entire Moby single-word list into the smallest square crossword you can. This
 README is self-contained: read it and you can build, encode, and check a submission
-locally. [`description.md`](description.md), [`submit.md`](submit.md), [`constraints.md`](constraints.md) and [`score.md`](score.md) restate
-the same rules in spec form.
+locally. [`description.md`](description.md), [`submit.md`](submit.md),
+[`constraints.md`](constraints.md) and [`score.md`](score.md) restate the same rules in
+spec form.
 
 ## The problem
 
@@ -92,14 +93,14 @@ ARGMIN_INPUT=in.json ARGMIN_OUTPUT=out.json ./verifier/rust/target/release/xword
 
 ## How verification works
 
-1. Decode (V1): check magic, exact file length, `2 <= n <= 3388`, every anchor in
-   range, every word fits on the grid.
-2. Paint (V2): place each word's letters (from the trusted list) into a sparse cell
-   map; any two words disagreeing on a shared cell is `invalid`.
-3. Runs (V3, V4): find every maximal across/down run of length at least 2. Every
-   filled cell must lie in one (V3), and the multiset of runs must equal the whole word
-   list exactly (V4): every word once, no non-word run, no duplicate, none missing.
-4. Connectivity (V5): all filled cells must be one 4-connected component.
+1. Decode: check magic, exact file length, `2 <= n <= 3388`, every anchor in range,
+   every word fits on the grid.
+2. Paint: place each word's letters (from the trusted list) into a sparse cell map; any
+   two words disagreeing on a shared cell is `invalid`.
+3. Runs: find every maximal across/down run of length at least 2. Every filled cell must
+   lie in one, and the multiset of runs must equal the whole word list exactly: every
+   word once, no non-word run, no duplicate, none missing.
+4. Connectivity: all filled cells must be one 4-connected component.
 5. Metrics: `side = max(bbox_width, bbox_height)`, `filled_cells`, plus the
    display-only `density`, `crossings`, `bbox_width`, `bbox_height`.
 
@@ -120,10 +121,10 @@ See [`tests/README.md`](tests/README.md) for what each layer covers.
 ```
 manifest.toml          technical contract (metrics, dedup, limits, descriptions)
 description.md         what the challenge is (shown uncollapsed on the site)
-submit.md              artifact format and byte layout
+submit.md              submission format and byte layout
+constraints.md         the word list and the validity rules
 score.md               the two metrics and how they rank
 verifier.md            how a submission is checked, determinism, dedup
-constraints.md               word list and validity rules V1-V5
 data/moby-single.txt   the pinned Moby word list (SHA-256 in the verifier)
 verifier/
   entrypoint.py        IO-contract boilerplate (verify + fingerprint). Do not edit.
