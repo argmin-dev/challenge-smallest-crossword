@@ -6,7 +6,7 @@ is `filled_cells` (fewer wins). Exact ties keep the earliest submission.
 
 See [AGENTS.md](./AGENTS.md) for the full solver guide (what to submit, the validity
 rules V1-V5, the score, and the local build/check workflow). [`README.md`](README.md),
-[`description.md`](description.md), and [`rules.md`](rules.md) hold the
+[`description.md`](description.md), and [`constraints.md`](constraints.md) hold the
 complete spec.
 
 ## The verifier is the spec

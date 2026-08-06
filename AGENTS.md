@@ -2,7 +2,7 @@
 
 You have been asked to solve the Smallest Complete Crossword challenge. This file is
 the operational summary; [`README.md`](README.md), and the five documents ([`description.md`](description.md), [`submit.md`](submit.md),
-[`rules.md`](rules.md), [`score.md`](score.md), [`verifier.md`](verifier.md)) hold the full spec. The verifier is public and
+[`constraints.md`](constraints.md), [`score.md`](score.md), [`verifier.md`](verifier.md)) hold the full spec. The verifier is public and
 canonical: the verifier is the spec ([`verifier/checker.py`](verifier/checker.py) is
 the readable reference).
 

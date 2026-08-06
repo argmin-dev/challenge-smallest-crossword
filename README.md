@@ -2,7 +2,7 @@
 
 Pack the entire Moby single-word list into the smallest square crossword you can. This
 README is self-contained: read it and you can build, encode, and check a submission
-locally. [`description.md`](description.md), [`submit.md`](submit.md), [`rules.md`](rules.md) and [`score.md`](score.md) restate
+locally. [`description.md`](description.md), [`submit.md`](submit.md), [`constraints.md`](constraints.md) and [`score.md`](score.md) restate
 the same rules in spec form.
 
 ## The problem
@@ -35,7 +35,7 @@ file, `XWD`, holding the grid side `n` and one record per word (in dictionary or
 giving that word's anchor cell and orientation (across or down). The verifier paints
 the letters from the trusted list and checks the result, so you can only position the
 real words, never inject a letter or a fake word. Full format in
-[`rules.md`](rules.md); for the full list the file is exactly `1,404,201`
+[`constraints.md`](constraints.md); for the full list the file is exactly `1,404,201`
 bytes.
 
 ## How small can it get
@@ -126,7 +126,7 @@ description.md         what the challenge is (shown uncollapsed on the site)
 submit.md              artifact format and byte layout
 score.md               the two metrics and how they rank
 verifier.md            how a submission is checked, determinism, dedup
-rules.md               word list and validity rules V1-V5
+constraints.md               word list and validity rules V1-V5
 data/moby-single.txt   the pinned Moby word list (SHA-256 in the verifier)
 verifier/
   entrypoint.py        IO-contract boilerplate (verify + fingerprint). Do not edit.

@@ -16,7 +16,7 @@ then exactly |D| = 351,049 records, each a u32:
 The file length must be exactly `5 + 4 * 351049 = 1,404,201` bytes. Any other length is
 `invalid`.
 
-Records are in the canonical dictionary order defined in [Rules](rules.md), so record
+Records are in the canonical dictionary order defined in [Constraints](constraints.md), so record
 `i` is word `D[i]` and the word itself is never stored. Decoding a record:
 `row = p % n`, `col = p // n`. The word's first letter (leftmost for across, topmost
 for down) goes at `(row, col)`. An across word extends right (increasing column); a
