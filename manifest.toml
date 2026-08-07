@@ -6,7 +6,7 @@ title             = "Smallest Complete Crossword"
 submission_format = "packed-binary-placements (.xwd)"
 
 description_one_line = "Pack every word of the Moby single-word list into the smallest possible square crossword."
-verifier_repo_url    = "https://github.com/argmin-dev/challenge-smallest-crossword"
+verifier_repo_url    = "https://github.com/argmindev/challenge-smallest-crossword"
 
 # Ranked metrics, primary first. Strictly lexicographic; exact ties keep the incumbent.
 [[metric]]
